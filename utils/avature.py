@@ -78,32 +78,43 @@ class LeadPersonHolder(object):
 
 class LeadPerson(object):
 
-    def __init__(self, **person_data):
+    def __init__(self, *key_data, **person_data):
         self.__dict__.update(person_data)
-        self.__dict__.update((k, v) for k, v in person_data.iteritems())
+        self.__dict__['dup_key'] = self.dup_key(key_data)
+        self.prep_router(key_data)
 
+    def prep_router(self, *key_data):
+        pass
 
-    def blank_test(self, value_passed):
-        if str(value_passed).lower() == 'nan':
-            return False
-        else:
-            vp = str(value_passed)
-            vp = vp.splitlines()
-            vp = vp[0]
-            return vp
-
-    def dup_key(self):
-
+    def dup_key(self, *key_data):
         dup_key = []
-        if self.li_url:
-            try:
-                li_key = self.li_url.split("/in/")[1]
-            except:
-                li_key = ""
-        else:
-            li_key = ""
+        for k, v in self.__dict__.items():
+            if k in key_data or k.lower() in key_data:
+                if k == 'LinkedIn':
+                    linkedin_v = self.linkedin_key(v)
+                    dup_key.append(linkedin_v)
+                else:
+                    dup_key.append(k)
 
-        dup_key.append(li_key)
+
+    def linkedin_key(self, url):
+        if "/in/" in url:
+            url = url.split("/in/")[1]
+        elif "/pub/" in url:
+            url = url.split("/pub/")[1]
+        elif "/recruiter/" in url:
+            url = url.split("/profile/")[1]
+        else:
+            return url
+        return url
+
+
+
+    def key_formats(self, dup_key_raw):
+        dup_key = []
+        for dk in dup_key_raw:
+            if "/in/" in dk:
+                dup_key.append(dk.split("\in\"))
 
         if self.email:
             dup_key.append(self.email)
