@@ -1,5 +1,8 @@
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 import easygui
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -11,10 +14,15 @@ class DupDriver(object):
         self.driver_path = driver_path
         self.DataDict = {}
         self.ErrorDict = {}
+        self.ResultsDict = {}
         self.iter_tally = 0
         self.driver = None
-        self.setup_driver()
-        self.login_avature()
+        # self.setup_driver()
+        # self.login_avature()
+
+    def __len__(self):
+        return len(self.DataDict)
+
 
     def append_data(self, data_row):
         new_data_key = self.next_available_key(self.DataDict)
@@ -28,60 +36,109 @@ class DupDriver(object):
         error_data_key = self.next_available_key(self.ErrorDict)
         self.ErrorDict[error_data_key] = self.DataDict[current_key]
 
+    def begin_session(self):
+        self.setup_driver()
+        self.login_avature()
+        self.clean_slate()
+
+
+    def clean_slate(self):
+        try:
+            filter_i = self.driver.find_element_by_css_selector("span.conditionViewer a")
+            filter_text = filter_i.text
+            self.clear_filter(filter_text)
+        except selenium.common.exceptions.NoSuchElementException:
+            return
+
     def setup_driver(self):
         self.driver = webdriver.Chrome(executable_path=self.driver_path)
-        self.driver.implicitly_wait(5)
+
+    def teardown_driver(self):
+        open_nav_menu = self.driver.find_element_by_css_selector(".crmui_usernamemenu_Menu")
+        self.cursor_to_element(open_nav_menu)
+        open_nav_menu.click()
+        log_out_button = self.driver.find_element_by_xpath("//*[text()='Log out']")
+        self.cursor_to_element(log_out_button)
+        log_out_button.click()
+        self.driver.quit()
+
+
+    def avature_session_status(self):
+        try:
+            # Returns True if Session is Still Active
+            session_active = WebDriverWait(self.driver, 5).until_not(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.DialogLoginPopup"))
+            )
+            return True
+        except:
+            return False
 
     def login_avature(self):
         self.driver.get("https://cisco.avature.net")
         easygui.msgbox("Please Login Into Avature. Minimize this window and then click OK when you are logged in.")
         time.sleep(5)
         easygui.ccbox("Confirming You Are Logged In to Avature")
+        self.clean_slate()
         self.driver.get(
             "https://cisco.avature.net/#People/Id:2266/Filters:{\"entityTypeId\":2,\"id\":396094,\"set\":null,\"timeZone\":\"America*/New_York\"}")
-        easygui.msgbox(
-            "DupCheck Will Now Check for " + str(len(self.dup_data_holder)) + " leads. You may minimize the browser "
+        wait_here = easygui.msgbox(
+            "DupCheck Will Now Check for " + str(len(self.DataDict)) + " leads. You may minimize the browser "
                                                                             "window. Please do not login to "
                                                                             "Avature through a different browser "
                                                                             "as this will stop the checker. Click "
                                                                             "OK when you are ready")
+        if wait_here:
+            pass
     def iter_tally_one(self):
         self.iter_tally = self.iter_tally + 1
 
 
     def present_dup(self): # extract one data record to check for duplicates
-        loaded_dup = self.dup_data_holder[self.iter_tally]
+        loaded_dup = self.DataDict[self.iter_tally]
         return loaded_dup
 
     def cursor_to_element(self, element):  # Move mouse over element
-        element_to_hover = ActionChains(self.driver).move_to_element(element)
-        element_to_hover.perform()
-
-    def open_filter_dropdown(self): # Hover and click on Add Filter Dropdown Menu
-        add_filter_menu = self.driver.find_element_by_xpath("//div[3]/div/span/span")
-        self.cursor_to_element(add_filter_menu)
-        add_filter_menu.click()
-
-    def set_filter_keywords(self, filter_text): # If Keywords is present in Recent or Favorites. If not, get it to Recent
         try:
-            keyword_filter = self.driver.find_element_by_xpath("//span[text()='Keywords']")
-            self.cursor_to_element(keyword_filter)
-            keyword_filter.click()
-            keyword_filter.clear()
-            keyword_filter.send_keys(filter_text)
-            apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
-            apply_button.click()
-        except selenium.common.exceptions.NoSuchElementException:
-            self.add_more_filters_select()
-            self.set_filter_keywords_addmore()
-            self.set_filter_keywords() # Try again
+            element_to_hover = ActionChains(self.driver).move_to_element(element)
+            element_to_hover.perform()
+        except Exception as e:
+            print("Cursor to Element Problem")
+            print(e)
 
-    def add_more_filters_select(self): # Selecting add more filters when Keywords is not present
+    def open_filter_dropdown(self):  # Hover and click on Add Filter Dropdown Menu
+        try:
+            add_filter_menu = self.driver.find_element_by_xpath("//div[3]/div/span/span")
+            self.cursor_to_element(add_filter_menu)
+            add_filter_menu.click()
+        except Exception as e:
+            print("Open Filter Problem")
+            print(e)
+
+    def set_filter_keywords(self, filter_text):  # If Keywords is present in Recent or Favorites. If not, get it to Recent
+        try:
+            try:
+                keyword_filter = self.driver.find_element_by_xpath("//span[text()='Keywords']")
+                self.cursor_to_element(keyword_filter)
+                keyword_filter.click()
+                keyword_box = self.driver.find_element_by_xpath("//textarea")
+                keyword_box.clear()
+                keyword_box.send_keys(filter_text)
+                apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
+                apply_button.click()
+            except selenium.common.exceptions.NoSuchElementException:
+                self.add_more_filters_select()
+                self.set_filter_keywords_addmore()
+                self.set_filter_keywords(filter_text)  # Try again
+        except Exception as e:
+            print("Problem Setting Keywords")
+            print(e)
+
+    def add_more_filters_select(self):  # Selecting add more filters when Keywords is not present
         add_more = self.driver.find_element_by_xpath("//span[text()='Add more filters']")
         self.cursor_to_element(add_more)
         add_more.click()
 
-    def set_filter_keywords_addmore(self): # From more filters screen, select keywords in order to push to recent
+    def set_filter_keywords_addmore(self):  # From more filters screen, select keywords in order to push to recent
         filter_box = self.driver.find_element_by_css_selector("input#TIN_input_TextInput487")
         self.cursor_to_element(filter_box)
         filter_box.click()
@@ -93,69 +150,110 @@ class DupDriver(object):
         apply_button.click()
 
     def interpret_search(self):
-        try:  # No results
-            search_results = self.driver.find_element_by_css_selector(".uicore_list_NoResultsMessage")
+        # TODO : Filter results that match from fields not associated with keyword search
+        try:
+            filter_on_page = WebDriverWait(self.driver, 10).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, "span.conditionViewer"))
+                    )
+            # Filter is present on page check if results returned or no results
+            try:  # No results
+                search_results = self.driver.find_element_by_css_selector(".uicore_list_NoResultsMessage")
+                return False
+            except selenium.common.exceptions.NoSuchElementException:  # Results found
+                search_url = self.driver.current_url
+                return search_url
+        except Exception as e:
+            print("Problem interpreting results")
+            print(e)
+
+
+    def clear_filter(self, dup_key):
+        try:
+            try:
+                filter_hyperlink = self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
+                self.cursor_to_element(filter_hyperlink)
+                filter_hyperlink.click()
+                WebDriverWait(self.driver, 10).until(
+                    EC.element_to_be_clickable((By.LINK_TEXT, "Remove filter")))
+                filter_hyperlink_remove = self.driver.find_element_by_link_text("Remove filter")
+                self.cursor_to_element(filter_hyperlink_remove)
+                filter_hyperlink_remove.click()
+                WebDriverWait(self.driver, 10).until_not(
+                    EC.element_to_be_clickable((By.LINK_TEXT, dup_key)))
+                self.confirm_filter_clear()
+            except selenium.common.exceptions.NoSuchElementException:
+                pass
+        except Exception as e:
+            print("Problem Clearing Filter")
+            print(e)
+
+
+    def confirm_filter_clear(self):
+        try:
+            filter_hyperlink = self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
+            self.clear_filter()
+        except selenium.common.exceptions.NoSuchElementException:
+            pass
+
+
+
+    def dup_check_avature(self, dup_check_row):
+        if self.avature_session_status():
+            self.open_filter_dropdown()
+        else:
             return False
-        except selenium.common.exceptions.NoSuchElementException: # Results found
-            search_url = self.driver.current_url
-            return search_url
-
-    def clear_filter(self):
-        filter_hyperlink = self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
-        filter_hyperlink_hover = ActionChains(self.driver).move_to_element(filter_hyperlink)
-        filter_hyperlink_hover.perform()
-        filter_hyperlink.click()
-        filter_hyperlink_remove = self.driver.find_element_by_link_text("Remove filter")
-        self.cursor_to_element(filter_hyperlink_remove)
-        filter_hyperlink_remove.click()
-
-
-    def dup_check_avature(self):
-        dup_check_row = self.present_dup()
-        self.open_filter_dropdown()
-        self.set_filter_keywords(dup_check_row)
-        dup_results = self.interpret_search()
+        if self.avature_session_status():
+            self.set_filter_keywords(dup_check_row)
+        else:
+            return False
+        if self.avature_session_status():
+            dup_results = self.interpret_search()
+        else: return False
         # Clear the filter search
-        self.clear_filter()
+        if self.avature_session_status():
+            self.clear_filter(dup_check_row)
+        else:
+            return False
         return dup_results
 
-class LeadPersonHolder(object):
+    def dup_check_batch(self):
+        while self.iter_tally < len(self):
+            dup_check_row = self.present_dup()
+            if dup_check_row == '':
+                self.ResultsDict[self.iter_tally] = {'key': dup_check_row, 'results': 'No Key Loaded'}
+                self.iter_tally_one()
+                continue
+            else:
+                dup_check = self.dup_check_avature(dup_check_row)
+                if dup_check is False:
+                    result = 'No Duplicates Found'
+                else:
+                    result = dup_check
+                self.ResultsDict[self.iter_tally] = {'key': dup_check_row, 'results': result}
+                self.iter_tally_one()
 
-    def __init__(self):
-        self.DataDict = {}
-        self.ErrorDict = {}
-        self.DupDriver = DupDriver(driver_path=r"C:\Users\erics_qp7a9\PycharmProjects\Scraping\chromedriver.exe")
 
-        #TODO Fix how filepath is passed
 
-    def append_data(self, data_row):
-        new_data_key = self.next_available_key(self.DataDict)
-        self.DataDict[new_data_key] = data_row
 
-    def next_available_key(self, data_holder):
-        dict_len = len(data_holder)
-        return dict_len
-
-    def append_data_error(self, current_key):
-        error_data_key = self.next_available_key(self.ErrorDict)
-        self.ErrorDict[error_data_key] = self.DataDict[current_key]
 
 
 class LeadPerson(object):
 
     def __init__(self, *key_data, **person_data):
-        self.__dict__.update(person_data)
-        self.__dict__['dup_key'] = self.dup_key(key_data)
+        self.person_data = person_data
+        self.key_data = key_data
+        self.dup_key = self.dup_key_gen()
+
 
     """
     :key_data - Specify which dictionary keys from person_data are to be used for key generation
     :person_data - Dictionary with desired person data
     """
 
-    def dup_key(self, *key_data):
+    def dup_key_gen(self):
         dup_key = []
-        for k, v in self.__dict__.items():
-            if k in key_data or k.lower() in key_data:
+        for k, v in self.person_data.items():
+            if k in self.key_data or k.lower() in self.key_data:
                 if k == 'LinkedIn':
                     linkedin_v = self.linkedin_key(v)
                     dup_key.append(linkedin_v)

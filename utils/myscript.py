@@ -35,6 +35,7 @@ current_headers = ui.detect_headers(dupcheck_data)
 rename_scheme = ui.prompt_header_match(current_headers)
 dupcheck_data = dupcheck_data.rename(columns=rename_scheme)
 
+dupcheck_data = dupcheck_data.fillna('')
 
 # Select Save Location for Results
 results_save_path = ui.select_save_loc()
@@ -50,32 +51,22 @@ for index, row in dupcheck_data.iterrows():
     data_as_dict['Email'] = row['Email']
     data_as_dict['LinkedIn'] = row['LinkedIn']
 
-    new_lead = avature.LeadPerson(['Email', 'LinkedIn'], data_as_dict)
+    new_lead = avature.LeadPerson(*['LinkedIn'], **data_as_dict)
     lead_holder.append(new_lead)
 
-dup_checker = avature.DupDriver(driver_path=)
+dup_checker = avature.DupDriver(driver_path=r"C:\Users\estasney\Documents\ChromeDriver\chromedriver.exe")
+
+for l in lead_holder:
+    dup_key = l.dup_key
+    dup_checker.append_data(dup_key)
+
 
 # Start Checking
 
-for lead in lead_person_holder:
-    try:
-        dup_check_test = dup_check_avature(lead.dupcheckkey)
-        dup_key_ran = lead.dupcheckkey
-        with open(results_of_check, "a+", encoding='utf-8', newline='') as csv_file:
-            outputwriter = csv.writer(csv_file, dialect='excel')
-            if dup_check_test is True:
-                dup_status = "POSSIBLE DUPLICATE"
-                outputwriter.writerow([dup_status, lead.fname, lead.email, lead.oemail, lead.li_url, lead.phone, dup_key_ran])
-            elif dup_check_test is False:
-                dup_status = "NO DUPLICATES FOUND"
-                outputwriter.writerow([dup_status, lead.fname, lead.email, lead.oemail, lead.li_url, lead.phone, dup_key_ran])
-    except:
+dup_checker.begin_session()
+dup_checker.dup_check_batch()
 
-        dup_key_ran = lead.dupcheckkey
-        with open(results_of_check, "a+", encoding='utf-8', newline='') as csv_file:
-            outputwriter = csv.writer(csv_file, dialect='excel')
-            dup_status = "ERROR CHECKING"
-            outputwriter.writerow([dup_status, lead.fname, lead.email, lead.oemail, lead.li_url, lead.phone, dup_key_ran])
+
 
 easygui.msgbox(msg="The check is complete. Press OK to exit.")
 avature_driver.quit()
