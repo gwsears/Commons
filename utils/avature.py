@@ -9,11 +9,24 @@ import time
 class DupDriver(object):
     def __init__(self, driver_path):
         self.driver_path = driver_path
-        self.dup_data_holder = {}
+        self.DataDict = {}
+        self.ErrorDict = {}
         self.iter_tally = 0
         self.driver = None
         self.setup_driver()
         self.login_avature()
+
+    def append_data(self, data_row):
+        new_data_key = self.next_available_key(self.DataDict)
+        self.DataDict[new_data_key] = data_row
+
+    def next_available_key(self, data_holder):
+        dict_len = len(data_holder)
+        return dict_len
+
+    def append_data_error(self, current_key):
+        error_data_key = self.next_available_key(self.ErrorDict)
+        self.ErrorDict[error_data_key] = self.DataDict[current_key]
 
     def setup_driver(self):
         self.driver = webdriver.Chrome(executable_path=self.driver_path)
@@ -107,9 +120,13 @@ class DupDriver(object):
         return dup_results
 
 class LeadPersonHolder(object):
+
     def __init__(self):
         self.DataDict = {}
         self.ErrorDict = {}
+        self.DupDriver = DupDriver(driver_path=r"C:\Users\erics_qp7a9\PycharmProjects\Scraping\chromedriver.exe")
+
+        #TODO Fix how filepath is passed
 
     def append_data(self, data_row):
         new_data_key = self.next_available_key(self.DataDict)

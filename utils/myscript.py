@@ -41,15 +41,19 @@ results_save_path = ui.select_save_loc()
 
 # Create LeadPerson objects and append to lead_person_holder
 
-lead_person_holder = []
+lead_holder = []
 
 for index, row in dupcheck_data.iterrows():
-    first_name = row['First Name']
-    last_name = row['Last Name']
-    email = row['Email']
-    website = row['LinkedIn']
+    data_as_dict = {}
+    data_as_dict['First Name'] = row['First Name']
+    data_as_dict['Last Name'] = row['Last Name']
+    data_as_dict['Email'] = row['Email']
+    data_as_dict['LinkedIn'] = row['LinkedIn']
 
+    new_lead = avature.LeadPerson(['Email', 'LinkedIn'], data_as_dict)
+    lead_holder.append(new_lead)
 
+dup_checker = avature.DupDriver(driver_path=)
 
 # Start Checking
 
