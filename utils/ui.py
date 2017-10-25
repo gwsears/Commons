@@ -65,6 +65,19 @@ def detect_headers(dup_check_data):  # Expects a DataFrame object
     headers = dup_check_data.columns.values.tolist()
     return headers
 
+def select_relevant_headers(headers):
+    chosen_headers = easygui.multchoicebox(msg="Choose Which Columns To Use",
+                                           title="Select Relevant Columns", choices=headers)
+    return chosen_headers
+
+def map_headers(headers, available_filters):
+    mapped_headers = {}
+    for header in headers:
+        msg = "Select a filter for {}".format(header)
+        map_head = easygui.choicebox(msg, choices=available_filters)
+        mapped_headers[header] = map_head
+    return mapped_headers
+
 
 def prompt_header_match(headers):
     user_msg = 'The following headers are present in the file. Which ones correspond with the fields below?: \n {}'.format('\n'.join(headers))

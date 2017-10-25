@@ -1,0 +1,18 @@
+First name
+Last name
+Full name
+Keywords
+Summary
+Tag
+Talent Hub Specialist
+City
+Metropolitan Area
+State
+Country
+Zip code
+College/University
+Employer
+Position title
+Prior Position Title
+Source
+

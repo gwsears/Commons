@@ -4,8 +4,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import easygui
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import selenium.common.exceptions
 import time
 
@@ -13,8 +11,6 @@ class DupDriver(object):
     def __init__(self, driver_path):
         self.driver_path = driver_path
         self.driver = None
-        # self.setup_driver()
-        # self.login_avature()
 
     def begin_session(self):
         self.setup_driver()
@@ -125,20 +121,37 @@ class DupDriver(object):
 
 
     def set_columns(self, columns):
-        self.open_filter_dropdown()
-        self.add_more_filters_select()
-        column_button = self.driver.find_element_by_xpath("//a[@title='Columns']")
-        column_button.click()
-        WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "table.EditableSelect"))
-        )
+        for col in columns:
+            self.open_filter_dropdown()
+            self.add_more_filters_select()
+            column_button = self.driver.find_element_by_xpath("//a[@title='Columns']")
+            column_button.click()
+            WebDriverWait(self.driver, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, "table.EditableSelect"))
+            )
+            self.set_column(col)
 
     def set_column(self, column):
-        column_entry = self.driver.find_element_by_css_selector
+        selector_base_available = "//td[@class='TwoPaneSelectAvailableTd']//option[@title='{}']"
+        selector_col_available = selector_base_available.format(column)
+        selector_base_selected = "//td[@class='EditableSelectElementColumn']//option[@title='{}']"
+        selector_col_selected = selector_base_selected.format(column)
+        try:
+            column_entry = self.driver.find_element_by_xpath(selector_col_available)
+            WebDriverWait(self.driver, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, selector_col_selected))
+            )
+        except selenium.common.exceptions.NoSuchElementException:
+            try:
+                self.driver.find_element_by_xpath(selector_col_selected)
+                return
+            except selenium.common.exceptions.NoSuchElementException:
+                print("Error Selecting Column Filter")
+                return
         column_entry.click()
         button_add_selection = self.driver.find_element_by_xpath("//td/button[text()='add >']")
         button_add_selection.click()
-        WebDriverWait(self.driver, 10).until()
+
 
 
 
@@ -153,14 +166,14 @@ class DupDriver(object):
                 search_results = self.driver.find_element_by_css_selector(".uicore_list_NoResultsMessage")
                 return False
             except selenium.common.exceptions.NoSuchElementException:  # Results found
-                relevancy = self.results_relevant()
+                # relevancy = self.results_relevant()
                 search_url = self.driver.current_url
                 return search_url
         except Exception as e:
             print("Problem interpreting results")
             print(e)
 
-    def results_relevant(self):
+    # def results_relevant(self, dup_key_map):
 
 
     def clear_filter(self, dup_key):
@@ -176,7 +189,7 @@ class DupDriver(object):
                 filter_hyperlink_remove.click()
                 WebDriverWait(self.driver, 10).until_not(
                     EC.element_to_be_clickable((By.LINK_TEXT, dup_key)))
-                self.confirm_filter_clear()
+                self.confirm_filter_clear(dup_key)
             except selenium.common.exceptions.NoSuchElementException:
                 pass
         except Exception as e:
@@ -184,14 +197,15 @@ class DupDriver(object):
             print(e)
 
 
-    def confirm_filter_clear(self):
+    def confirm_filter_clear(self, dup_key):
         try:
-            filter_hyperlink = self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
-            self.clear_filter()
+            self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
+            self.clear_filter(dup_key)
         except selenium.common.exceptions.NoSuchElementException:
             pass
 
 
+# TODO Add dup_key_map
 
     def dup_check_avature(self, dup_check_row):
         if self.avature_session_status():
@@ -212,68 +226,7 @@ class DupDriver(object):
             return False
         return dup_results
 
-    def dup_check_batch(self):
-        while self.iter_tally < len(self):
-            dup_check_row = self.present_dup()
-            if dup_check_row == '':
-                self.ResultsDict[self.iter_tally] = {'key': dup_check_row, 'results': 'No Key Loaded'}
-                self.iter_tally_one()
-                continue
-            else:
-                dup_check = self.dup_check_avature(dup_check_row)
-                if dup_check is False:
-                    result = 'No Duplicates Found'
-                else:
-                    result = dup_check
-                self.ResultsDict[self.iter_tally] = {'key': dup_check_row, 'results': result}
-                self.iter_tally_one()
 
-
-
-
-
-
-class LeadPerson(object):
-
-    def __init__(self, *key_data, **person_data):
-        self.person_data = person_data
-        self.key_data = key_data
-        self.dup_key = self.dup_key_gen()
-
-
-    """
-    :key_data - Specify which dictionary keys from person_data are to be used for key generation
-    :person_data - Dictionary with desired person data
-    """
-
-    def dup_key_gen(self):
-        dup_key = []
-        for k, v in self.person_data.items():
-            if k in self.key_data or k.lower() in self.key_data:
-                if k == 'LinkedIn':
-                    linkedin_v = self.linkedin_key(v)
-                    dup_key.append(linkedin_v)
-                else:
-                    dup_key.append(k)
-        concat_key = self.concat_key(dup_key)
-        return concat_key
-
-
-    def linkedin_key(self, url):
-        if "/in/" in url:
-            url = url.split("/in/")[1]
-        elif "/pub/" in url:
-            url = url.split("/pub/")[1]
-        elif "/recruiter/" in url:
-            url = url.split("/profile/")[1]
-        else:
-            return url
-        return url
-
-
-    def concat_key(self, dup_key_raw):
-        dup_key = ' OR '.join([key for key in dup_key_raw])
-        return dup_key
 
 
 
