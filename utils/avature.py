@@ -12,29 +12,9 @@ import time
 class DupDriver(object):
     def __init__(self, driver_path):
         self.driver_path = driver_path
-        self.DataDict = {}
-        self.ErrorDict = {}
-        self.ResultsDict = {}
-        self.iter_tally = 0
         self.driver = None
         # self.setup_driver()
         # self.login_avature()
-
-    def __len__(self):
-        return len(self.DataDict)
-
-
-    def append_data(self, data_row):
-        new_data_key = self.next_available_key(self.DataDict)
-        self.DataDict[new_data_key] = data_row
-
-    def next_available_key(self, data_holder):
-        dict_len = len(data_holder)
-        return dict_len
-
-    def append_data_error(self, current_key):
-        error_data_key = self.next_available_key(self.ErrorDict)
-        self.ErrorDict[error_data_key] = self.DataDict[current_key]
 
     def begin_session(self):
         self.setup_driver()
@@ -73,6 +53,7 @@ class DupDriver(object):
         except:
             return False
 
+
     def login_avature(self):
         self.driver.get("https://cisco.avature.net")
         easygui.msgbox("Please Login Into Avature. Minimize this window and then click OK when you are logged in.")
@@ -81,21 +62,7 @@ class DupDriver(object):
         self.clean_slate()
         self.driver.get(
             "https://cisco.avature.net/#People/Id:2266/Filters:{\"entityTypeId\":2,\"id\":396094,\"set\":null,\"timeZone\":\"America*/New_York\"}")
-        wait_here = easygui.msgbox(
-            "DupCheck Will Now Check for " + str(len(self.DataDict)) + " leads. You may minimize the browser "
-                                                                            "window. Please do not login to "
-                                                                            "Avature through a different browser "
-                                                                            "as this will stop the checker. Click "
-                                                                            "OK when you are ready")
-        if wait_here:
-            pass
-    def iter_tally_one(self):
-        self.iter_tally = self.iter_tally + 1
 
-
-    def present_dup(self): # extract one data record to check for duplicates
-        loaded_dup = self.DataDict[self.iter_tally]
-        return loaded_dup
 
     def cursor_to_element(self, element):  # Move mouse over element
         try:
@@ -110,6 +77,10 @@ class DupDriver(object):
             add_filter_menu = self.driver.find_element_by_xpath("//div[3]/div/span/span")
             self.cursor_to_element(add_filter_menu)
             add_filter_menu.click()
+            WebDriverWait(self.driver, 10).until(
+                        EC.visibility_of_element_located((By.CSS_SELECTOR, "div.FloatingMenu.filtersFloatingMenu"))
+            )
+
         except Exception as e:
             print("Open Filter Problem")
             print(e)
@@ -137,6 +108,9 @@ class DupDriver(object):
         add_more = self.driver.find_element_by_xpath("//span[text()='Add more filters']")
         self.cursor_to_element(add_more)
         add_more.click()
+        WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//a[@title='Columns']"))
+        )
 
     def set_filter_keywords_addmore(self):  # From more filters screen, select keywords in order to push to recent
         filter_box = self.driver.find_element_by_css_selector("input#TIN_input_TextInput487")
@@ -149,7 +123,26 @@ class DupDriver(object):
         apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
         apply_button.click()
 
-    def interpret_search(self):
+
+    def set_columns(self, columns):
+        self.open_filter_dropdown()
+        self.add_more_filters_select()
+        column_button = self.driver.find_element_by_xpath("//a[@title='Columns']")
+        column_button.click()
+        WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "table.EditableSelect"))
+        )
+
+    def set_column(self, column):
+        column_entry = self.driver.find_element_by_css_selector
+        column_entry.click()
+        button_add_selection = self.driver.find_element_by_xpath("//td/button[text()='add >']")
+        button_add_selection.click()
+        WebDriverWait(self.driver, 10).until()
+
+
+
+    def results_exist(self):
         # TODO : Filter results that match from fields not associated with keyword search
         try:
             filter_on_page = WebDriverWait(self.driver, 10).until(
@@ -160,11 +153,14 @@ class DupDriver(object):
                 search_results = self.driver.find_element_by_css_selector(".uicore_list_NoResultsMessage")
                 return False
             except selenium.common.exceptions.NoSuchElementException:  # Results found
+                relevancy = self.results_relevant()
                 search_url = self.driver.current_url
                 return search_url
         except Exception as e:
             print("Problem interpreting results")
             print(e)
+
+    def results_relevant(self):
 
 
     def clear_filter(self, dup_key):
@@ -207,7 +203,7 @@ class DupDriver(object):
         else:
             return False
         if self.avature_session_status():
-            dup_results = self.interpret_search()
+            dup_results = self.results_exist()
         else: return False
         # Clear the filter search
         if self.avature_session_status():
