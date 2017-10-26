@@ -84,12 +84,16 @@ class DupDriver(object):
     def set_filter(self, filter_type, filter_text):  # If Keywords is present in Recent or Favorites. If not, get it to Recent
         try:
             try:
-                filter_selector_base = "//span[contains(@class,'Floating)]//span[contains(text(),'{}')]"
+                filter_selector_base = "//span[contains(@class,'Floating')]//span[contains(text(),'{}')]"
                 filter_selector = filter_selector_base.format(filter_type)
                 target_filter = self.driver.find_element_by_xpath(filter_selector)
                 self.cursor_to_element(target_filter)
                 target_filter.click()
-                text_box = self.driver.find_element_by_xpath("//textarea")
+                try:
+                    text_box = self.driver.find_element_by_xpath("//textarea")
+                except selenium.common.exceptions.NoSuchElementException:
+                    text_box = self.driver.find_element_by_xpath("//div[@class='inputContainer']/input"
+)
                 text_box.clear()
                 text_box.send_keys(filter_text)
                 apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
