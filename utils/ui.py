@@ -73,7 +73,7 @@ def select_relevant_headers(headers):
 def map_headers(headers, available_filters):
     mapped_headers = {}
     for header in headers:
-        msg = "Select a filter for {}".format(header)
+        msg = "Select a filter for {}. \n If category not on list, select Keywords".format(header)
         map_head = easygui.choicebox(msg, choices=available_filters)
         mapped_headers[header] = map_head
     return mapped_headers

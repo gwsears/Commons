@@ -81,26 +81,28 @@ class DupDriver(object):
             print("Open Filter Problem")
             print(e)
 
-    def set_filter_keywords(self, filter_text):  # If Keywords is present in Recent or Favorites. If not, get it to Recent
+    def set_filter(self, filter_type, filter_text):  # If Keywords is present in Recent or Favorites. If not, get it to Recent
         try:
             try:
-                keyword_filter = self.driver.find_element_by_xpath("//span[text()='Keywords']")
-                self.cursor_to_element(keyword_filter)
-                keyword_filter.click()
-                keyword_box = self.driver.find_element_by_xpath("//textarea")
-                keyword_box.clear()
-                keyword_box.send_keys(filter_text)
+                filter_selector_base = "//span[contains(@class,'Floating)]//span[contains(text(),'{}')]"
+                filter_selector = filter_selector_base.format(filter_type)
+                target_filter = self.driver.find_element_by_xpath(filter_selector)
+                self.cursor_to_element(target_filter)
+                target_filter.click()
+                text_box = self.driver.find_element_by_xpath("//textarea")
+                text_box.clear()
+                text_box.send_keys(filter_text)
                 apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
                 apply_button.click()
             except selenium.common.exceptions.NoSuchElementException:
                 self.add_more_filters_select()
-                self.set_filter_keywords_addmore()
-                self.set_filter_keywords(filter_text)  # Try again
+                self.set_filter_addmore(filter_type)
+                self.set_filter(filter_type, filter_text)  # Try again
         except Exception as e:
             print("Problem Setting Keywords")
             print(e)
 
-    def add_more_filters_select(self):  # Selecting add more filters when Keywords is not present
+    def add_more_filters_select(self):  # Selecting add more filters when desired filter is not present
         add_more = self.driver.find_element_by_xpath("//span[text()='Add more filters']")
         self.cursor_to_element(add_more)
         add_more.click()
@@ -108,14 +110,15 @@ class DupDriver(object):
             EC.element_to_be_clickable((By.XPATH, "//a[@title='Columns']"))
         )
 
-    def set_filter_keywords_addmore(self):  # From more filters screen, select keywords in order to push to recent
-        filter_box = self.driver.find_element_by_css_selector("input#TIN_input_TextInput487")
+    def set_filter_addmore(self, filter_type):  # From more filters screen, select keywords in order to push to recent
+        filter_box = self.driver.find_element_by_css_selector("div.formContainer:nth-of-type(1) span[id*='Advanced'] input[id*='TIN']")
         self.cursor_to_element(filter_box)
         filter_box.click()
         filter_box.clear()
-        filter_box.send_keys("Keywords")
-        keyword_filter_element = self.driver.find_element_by_xpath("//span[text()='Keywords']")
-        keyword_filter_element.click()
+        filter_box.send_keys(filter_type)
+        filter_base_selector = "//span[@title='{}']".format(filter_type)
+        filter_element = self.driver.find_element_by_xpath(filter_base_selector)
+        filter_element.click()
         apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
         apply_button.click()
 
@@ -207,18 +210,17 @@ class DupDriver(object):
 
 # TODO Add dup_key_map
 
-    def dup_check_avature(self, dup_check_row):
+    def dup_check_avature(self, type_value_dict):  # Expects Dictionary with Type : Data format
         if self.avature_session_status():
-            self.open_filter_dropdown()
-        else:
-            return False
-        if self.avature_session_status():
-            self.set_filter_keywords(dup_check_row)
+            for k, v in type_value_dict.items():
+                self.open_filter_dropdown()
+                self.set_filter(k, v)
         else:
             return False
         if self.avature_session_status():
             dup_results = self.results_exist()
-        else: return False
+        else:
+            return False
         # Clear the filter search
         if self.avature_session_status():
             self.clear_filter(dup_check_row)
