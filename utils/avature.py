@@ -17,14 +17,45 @@ class DupDriver(object):
         self.login_avature()
         self.clean_slate()
 
-
     def clean_slate(self):
+        dirty_slate = True
+        while dirty_slate is True:
+            try:
+                filter_i = self.driver.find_element_by_css_selector("span.conditionViewer a")
+                filter_text = filter_i.text
+                self.clear_filter(filter_text)
+            except selenium.common.exceptions.NoSuchElementException:
+                dirty_slate = False
+        return
+
+    def clear_filter(self, filter_text):
         try:
-            filter_i = self.driver.find_element_by_css_selector("span.conditionViewer a")
-            filter_text = filter_i.text
-            self.clear_filter(filter_text)
+            try:
+                filter_hyperlink = self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
+                self.cursor_to_element(filter_hyperlink)
+                filter_hyperlink.click()
+                WebDriverWait(self.driver, 10).until(
+                    EC.element_to_be_clickable((By.LINK_TEXT, "Remove filter")))
+                filter_hyperlink_remove = self.driver.find_element_by_link_text("Remove filter")
+                self.cursor_to_element(filter_hyperlink_remove)
+                filter_hyperlink_remove.click()
+                WebDriverWait(self.driver, 10).until_not(
+                    EC.element_to_be_clickable((By.LINK_TEXT, dup_key)))
+                self.confirm_filter_clear(dup_key)
+            except selenium.common.exceptions.NoSuchElementException:
+                pass
+        except Exception as e:
+            print("Problem Clearing Filter")
+            print(e)
+
+
+    def confirm_filter_clear(self, dup_key):
+        try:
+            self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
+            self.clear_filter(dup_key)
         except selenium.common.exceptions.NoSuchElementException:
-            return
+            pass
+
 
     def setup_driver(self):
         self.driver = webdriver.Chrome(executable_path=self.driver_path)
@@ -195,33 +226,7 @@ class DupDriver(object):
     # def results_relevant(self, dup_key_map):
 
 
-    def clear_filter(self, dup_key):
-        try:
-            try:
-                filter_hyperlink = self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
-                self.cursor_to_element(filter_hyperlink)
-                filter_hyperlink.click()
-                WebDriverWait(self.driver, 10).until(
-                    EC.element_to_be_clickable((By.LINK_TEXT, "Remove filter")))
-                filter_hyperlink_remove = self.driver.find_element_by_link_text("Remove filter")
-                self.cursor_to_element(filter_hyperlink_remove)
-                filter_hyperlink_remove.click()
-                WebDriverWait(self.driver, 10).until_not(
-                    EC.element_to_be_clickable((By.LINK_TEXT, dup_key)))
-                self.confirm_filter_clear(dup_key)
-            except selenium.common.exceptions.NoSuchElementException:
-                pass
-        except Exception as e:
-            print("Problem Clearing Filter")
-            print(e)
 
-
-    def confirm_filter_clear(self, dup_key):
-        try:
-            self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
-            self.clear_filter(dup_key)
-        except selenium.common.exceptions.NoSuchElementException:
-            pass
 
 
 # TODO Add dup_key_map
