@@ -64,7 +64,7 @@ for index, row in dupcheck_data.iterrows():
 
 
 
-dup_checker = avature.DupDriver(driver_path=r"C:\Users\estasney\Documents\ChromeDriver\chromedriver_2.33.exe")
+dup_checker = avature.DupDriver(driver_path="chromedriver.exe")
 
 dup_results_dict = {}
 

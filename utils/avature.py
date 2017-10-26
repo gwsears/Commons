@@ -89,15 +89,21 @@ class DupDriver(object):
                 target_filter = self.driver.find_element_by_xpath(filter_selector)
                 self.cursor_to_element(target_filter)
                 target_filter.click()
+                # If available, will click from floating menu
                 try:
+                    # Depending on filter selected... keywords
                     text_box = self.driver.find_element_by_xpath("//textarea")
                 except selenium.common.exceptions.NoSuchElementException:
-                    text_box = self.driver.find_element_by_xpath("//div[@class='inputContainer']/input"
-)
+                    # I.e. full name filter
+                    text_box = self.driver.find_element_by_xpath("//div[@class='inputContainer']/input")
                 text_box.clear()
                 text_box.send_keys(filter_text)
                 apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
                 apply_button.click()
+                # Wait for apply button to not be visible
+                WebDriverWait(self.driver, 10).until_not(
+                    EC.visibility_of_element_located((By.XPATH, "//button[text()='Apply']"))
+                )
             except selenium.common.exceptions.NoSuchElementException:
                 self.add_more_filters_select()
                 self.set_filter_addmore(filter_type)
@@ -125,6 +131,12 @@ class DupDriver(object):
         filter_element.click()
         apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
         apply_button.click()
+        WebDriverWait(self.driver, 10).until_not(
+            EC.visibility_of_element_located((By.XPATH, "//button[text()='Apply']"))
+        )
+        WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, "ListRefresherIcon"))
+        )
 
 
     def set_columns(self, columns):
@@ -227,7 +239,7 @@ class DupDriver(object):
             return False
         # Clear the filter search
         if self.avature_session_status():
-            self.clear_filter(dup_check_row)
+            self.clean_slate()
         else:
             return False
         return dup_results
