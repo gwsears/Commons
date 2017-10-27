@@ -40,8 +40,8 @@ class DupDriver(object):
                 self.cursor_to_element(filter_hyperlink_remove)
                 filter_hyperlink_remove.click()
                 WebDriverWait(self.driver, 10).until_not(
-                    EC.element_to_be_clickable((By.LINK_TEXT, dup_key)))
-                self.confirm_filter_clear(dup_key)
+                    EC.element_to_be_clickable((By.LINK_TEXT, filter_text)))
+                self.confirm_filter_clear(filter_text)
             except selenium.common.exceptions.NoSuchElementException:
                 pass
         except Exception as e:
