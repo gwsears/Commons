@@ -5,15 +5,16 @@ from bs4 import UnicodeDammit
 
 def get_default_dir():
     username = os.getlogin()
-    default_dir = os.path.join(r"C:\Users", username, "dupcheck.csv")
+    default_dir = os.path.join(r"C:\Users", username, "dupcheck.xlsx")
     return default_dir
 
 def select_save_loc():
     default_dir = get_default_dir()
     results_of_check = easygui.filesavebox("Select where to save the Duplicate Checker Results", "Save File",
                                            default=default_dir)
-    if ".csv" in results_of_check is False:  # Ensure CSV filetype
-        results_of_check = results_of_check + ".csv"
+    file_ext = os.path.splitext(results_of_check)[1]
+    if file_ext == '':
+        results_of_check = results_of_check + ".xlsx"
     return results_of_check
 
 def select_set():

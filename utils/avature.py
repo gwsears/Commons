@@ -202,6 +202,51 @@ class DupDriver(object):
         button_add_selection = self.driver.find_element_by_xpath("//td/button[text()='add >']")
         button_add_selection.click()
 
+    def click_create_button(self):
+        create_button = self.driver.find_element_by_css_selector(".crmui_recordcreator_Base")
+        self.cursor_to_element(create_button)
+        create_button.click()
+        WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.XPATH, "//span[text()='Person']"))
+        )
+
+    def click_create_person(self):
+        create_person = self.driver.find_element_by_xpath("//span[text()='Person']")
+        self.cursor_to_element(create_person)
+        create_person.click()
+        WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.XPATH, "//h1[text()='Create person']"))
+        )
+
+    def select_create_method(self): # TODO Add different method supports, by file, copy paste, etc
+        manual_selection = self.driver.find_element_by_xpath("// li[text() = 'Manually']")
+        self.cursor_to_element(manual_selection)
+        manual_selection.click()
+        WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "PersonCreatorManualFirstName"))
+        )
+
+    def create_first_name(self, text_entry):
+        first_name_box = self.driver.find_element_by_css_selector(".PersonCreatorManualFirstName input")
+        self.cursor_to_element(first_name_box)
+        first_name_box.send_keys(text_entry)
+
+    def create_last_name(self, text_entry):
+        last_name_box = self.driver.find_element_by_css_selector(".PersonCreatorManualLastName input")
+        self.cursor_to_element(last_name_box)
+        last_name_box.send_keys(text_entry)
+
+    def create_position_title(self, text_entry):
+        position_title_box = self.driver.find_element_by_css_selector(".PersonCreatorManualFormRow.PersonCreatorPositionTitleRow input[placeholder='Position title']")
+        self.cursor_to_element(position_title_box)
+        position_title_box.send_keys(text_entry)
+
+    def create_current_company(self, text_entry):
+        current_company_box = self.driver.find_element_by_css_selector(".PersonCreatorManualFormRow.PersonCreatorPositionTitleRow input[placeholder='Company']")
+        self.cursor_to_element(current_company_box)
+        current_company_box.send_keys(text_entry)
+
+    def create_click_source_dropdown(self, source="LinkedIn Recruiter"):
 
 
 

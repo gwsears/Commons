@@ -1,7 +1,9 @@
 import easygui
 import pandas as pd
-from utils import ui, avature
-
+# from utils import ui, avature
+from utils import ui
+from utils import avature
+import os
 """
 
 
@@ -76,7 +78,7 @@ for index, row in dupcheck_data.iterrows():
 
 
 # Initialize Dup Checker
-dup_checker = avature.DupDriver(driver_path="utils/chromedriver.exe")
+dup_checker = avature.DupDriver(driver_path="chromedriver.exe")
 # Create dict to hold results
 dup_results_dict = {}
 # Open, login, etc
@@ -98,3 +100,11 @@ df_results = pd.DataFrame.from_dict(dup_results_dict, orient='index')
 dupcheck_data['Results'] = df_results
 easygui.msgbox(msg="The check is complete. Press OK to exit.")
 dup_checker.teardown_driver()
+results_save_path_ext = os.path.splitext(results_save_path)[1]
+if results_save_path_ext == 'csv':
+    dupcheck_data.to_csv(results_save_path)
+elif results_save_path_ext == 'xlsx':
+    dupcheck_data.to_excel(results_save_path)
+else:
+    print("Error Saving... copied to clipboard")
+    dupcheck_data.to_clipboard()
