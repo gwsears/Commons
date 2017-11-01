@@ -207,11 +207,11 @@ class DupDriver(object):
         self.cursor_to_element(create_button)
         create_button.click()
         WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located((By.XPATH, "//span[text()='Person']"))
+            EC.visibility_of_element_located((By.XPATH, "//div[@class='crmui_Sidebar']//span[text()='Person']"))
         )
 
     def click_create_person(self):
-        create_person = self.driver.find_element_by_xpath("//span[text()='Person']")
+        create_person = self.driver.find_element_by_xpath("//div[@class='crmui_Sidebar']//span[text()='Person']")
         self.cursor_to_element(create_person)
         create_person.click()
         WebDriverWait(self.driver, 10).until(
@@ -246,7 +246,104 @@ class DupDriver(object):
         self.cursor_to_element(current_company_box)
         current_company_box.send_keys(text_entry)
 
-    def create_click_source_dropdown(self, source="LinkedIn Recruiter"):
+    def create_click_select_source_dropdown(self, source_text="LinkedIn Recruiter, Sourced from"):
+        select_source_dropdown = self.driver.find_element_by_css_selector("span.AdvancedSelectInput")
+        select_source_input = select_source_dropdown.find_element_by_css_selector("input")
+        select_source_input.send_keys(source_text)
+        matched_selector = "//span[text()='{}']".format(source_text)
+        matched_source = self.driver.find_element_by_xpath(matched_selector)
+        self.cursor_to_element(matched_source)
+        matched_source.click()
+        WebDriverWait(self.driver, 10).until(
+            EC.invisibility_of_element_located((By.XPATH, matched_selector))
+        )
+
+    def create_email(self, text_entry):
+        email_box = self.driver.find_element_by_css_selector("input[placeholder='Email']")
+        self.cursor_to_element(email_box)
+        email_box.send_keys(text_entry)
+
+    def create_save_button(self, person_first, person_last):
+        save_button = self.driver.find_element_by_css_selector(".PersonCreatorManual button.TIN_input_button_Primary")
+        self.cursor_to_element(save_button)
+        save_button.click()
+        person_profile_selector = "//span[@class='record_EditableTitle_Viewer']/span[text()='{} {}']".format(
+            person_first, person_last)
+        WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.XPATH, person_profile_selector))
+        )
+
+    def profile_enter_talent_hub_specialist(self, ths="Eric Stasney"):
+        ths_box = self.driver.find_element_by_xpath("//span[text()='Talent Hub Specialist']//ancestor::div[@class='row']//span[text()='Edit']")
+        ths_box.click()
+        ths_dropdown = self.driver.find_element_by_xpath("//div[@class='AdvancedSelectInput']")
+        ths_dropdown_input = ths_dropdown.find_element_by_xpath("//input")
+        ths_dropdown_input.send_keys(ths)
+        matched_selector = "span[title*='{}']".format(ths)
+        matched_ths = self.driver.find_element_by_css_selector(matched_selector)
+        matched_ths.click()
+        ths_confirmed_selector = "//span[contains(text(), '{}')]".format(ths)
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, ths_confirmed_selector))
+        )
+
+    def contact_info_click_plus(self):
+        plus_button = self.driver.find_element_by_css_selector("div.contactInfoList .uicore_layout_panel_HeaderToolbar_Item > span")
+        self.cursor_to_element(plus_button)
+        plus_button.click()
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.FloatingMenuButton span[title='Phone']"))
+        )
+
+    def contact_info_enter_field(self, field_type, text_entry): # 'Email', 'Website' 'Street Address'
+        desired_field_selector = "span[title='{}']".format(field_type)
+        desired_field = self.driver.find_element_by_css_selector(desired_field_selector)
+        desired_field.click()
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "table.EditContactInfoContainer"))
+        )
+        if field_type != 'Street address':
+            field_entry_box = self.driver.find_element_by_xpath("//input")
+            field_entry_box.send_keys(text_entry)
+            WebDriverWait(self.driver, 10).until(
+                EC.invisibility_of_element_located((By.CSS_SELECTOR, "table.EditContactInfoContainer"))
+            )
+            return
+        else:
+            country_dropdown = self.driver.find_element_by_xpath("//option[@title='United States']")
+            country_dropdown.click()
+            zip_code_box = self.driver.find_element_by_css_selector("input[placeholder='Zip/Postal code']")
+            zip_code_box.send_keys(text_entry)
+
+    def attach_pdf(self, file_name, file_path):
+        attach_button = self.driver.find_element_by_xpath("//a[text()='Attach']")
+        self.cursor_to_element(attach_button)
+        attach_button.click()
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
+        )
+        choose_file = self.driver.find_element_by_css_selector("input[type='file']")
+        try:
+            choose_file.send_keys(file_path)
+        except:
+            return
+        save_file_button = self.driver.find_element_by_xpath("//button[text()='Save']")
+        save_file_button.click()
+        WebDriverWait(self.driver, 30).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "button.TIN_input_button_Base TIN_input_button_Cancel"))
+        )
+        cancel_button = self.driver.find_element_by_css_selector("button.TIN_input_button_Base TIN_input_button_Cancel")
+        cancel_button.click()
+        WebDriverWait(self.driver, 10).until(
+            EC.invisibility_of_element_located((By.CSS_SELECTOR, "button.TIN_input_button_Base TIN_input_button_Cancel"))
+        )
+
+
+
+
+
+
+
 
 
 

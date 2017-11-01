@@ -33,7 +33,9 @@ available_filters = ['Keywords']
 
 
 category_term = ui.map_headers(relevant_headers, available_filters)
+dupcheck_data = dupcheck_data.replace(['null'], '')
 dupcheck_data = dupcheck_data.fillna('')
+
 
 # Select Save Location for Results
 results_save_path = ui.select_save_loc()
@@ -78,7 +80,7 @@ for index, row in dupcheck_data.iterrows():
 
 
 # Initialize Dup Checker
-dup_checker = avature.DupDriver(driver_path="chromedriver.exe")
+dup_checker = avature.DupDriver(driver_path=r"C:\Users\estasney\PycharmProjects\Commons\utils\chromedriver.exe")
 # Create dict to hold results
 dup_results_dict = {}
 # Open, login, etc
@@ -94,6 +96,47 @@ for k, v in lead_holder_dict.items():
 
     dup_results_dict[k] = dup_result
 
+
+# For profiles, without result create profiles in Avature
+
+profiles_to_create = {}
+
+for k, v in dup_results_dict.items():
+    if v is False:
+        profiles_to_create[k] = dupcheck_data.iloc[k].to_dict()
+
+
+for create_profile in profiles_to_create.values():
+    first_name = create_profile['Name']
+
+    last_name = create_profile['Last Name_x']
+    website = create_profile['LinkedIn url (1)']
+    pdf_filename = create_profile['PDF Filename']
+    pdf_filename = os.path.join(r"C:\Users\estasney\Downloads", (pdf_filename + ".pdf"))
+    position_title = create_profile['Title']
+    company_name = create_profile['Company Name']
+    email_one = create_profile['Email 1']
+    if email_one == '':
+        continue
+    zip_code = create_profile['Zip Code']
+
+
+
+    dup_checker.click_create_button()
+    dup_checker.click_create_person()
+    dup_checker.select_create_method()
+    dup_checker.create_first_name(first_name)
+    dup_checker.create_last_name(last_name)
+    dup_checker.create_current_company(company_name)
+    dup_checker.create_position_title(position_title)
+    dup_checker.create_click_select_source_dropdown()
+    dup_checker.create_email(email_one)
+    dup_checker.create_save_button(first_name, last_name)
+    dup_checker.profile_enter_talent_hub_specialist()
+    dup_checker.contact_info_click_plus()
+    dup_checker.contact_info_enter_field('Website', website)
+    dup_checker.contact_info_click_plus()
+    dup_checker.contact_info_enter_field('Street address')
 
 # Merge results dict with dup_check data
 df_results = pd.DataFrame.from_dict(dup_results_dict, orient='index')

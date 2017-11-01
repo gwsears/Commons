@@ -67,7 +67,7 @@ def detect_headers(dup_check_data):  # Expects a DataFrame object
     return headers
 
 def select_relevant_headers(headers):
-    chosen_headers = easygui.multchoicebox(msg="Choose Which Columns To Use",
+    chosen_headers = easygui.multchoicebox(msg="Choose Which Columns To Use for DupChecking",
                                            title="Select Relevant Columns", choices=headers)
     return chosen_headers
 
