@@ -43,7 +43,7 @@ class DupDriver(object):
                     EC.element_to_be_clickable((By.LINK_TEXT, filter_text)))
                 self.confirm_filter_clear(filter_text)
             except selenium.common.exceptions.NoSuchElementException:
-                pass
+                return
         except Exception as e:
             print("Problem Clearing Filter")
             print(e)
@@ -337,6 +337,24 @@ class DupDriver(object):
         WebDriverWait(self.driver, 10).until(
             EC.invisibility_of_element_located((By.CSS_SELECTOR, "button.TIN_input_button_Base TIN_input_button_Cancel"))
         )
+
+    def open_creation_dialog(self):
+        self.click_create_button()
+        self.click_create_person()
+        self.select_create_method()
+
+    def values_to_creation_dialog(self, person_dict):
+        self.open_creation_dialog()
+        self.create_first_name(person_dict['First Name'])
+        self.create_last_name(person_dict['Last Name'])
+        self.create_position_title(person_dict['Position Title'])
+        self.create_current_company(person_dict['Company Name'])
+        self.create_click_select_source_dropdown()
+        if type(person_dict['Email']) == 'list':
+            self.create_email(person_dict['Email'][0])
+        else:
+            self.create_email(person_dict['Email'])
+        self.create_save_button(person_dict['First Name'], person_dict['Last Name'])
 
 
 

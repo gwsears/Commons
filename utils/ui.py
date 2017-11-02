@@ -66,15 +66,21 @@ def detect_headers(dup_check_data):  # Expects a DataFrame object
     headers = dup_check_data.columns.values.tolist()
     return headers
 
-def select_relevant_headers(headers):
-    chosen_headers = easygui.multchoicebox(msg="Choose Which Columns To Use for DupChecking",
-                                           title="Select Relevant Columns", choices=headers)
+def select_relevant_headers(headers, dup_check=True):
+    if dup_check:
+        msg = "Choose Which Columns To Use for DupChecking"
+    else:
+        msg = "Choose Which Columns to Use for Lead Creation"
+    chosen_headers = easygui.multchoicebox(msg=msg, title="Select Relevant Columns", choices=headers)
     return chosen_headers
 
-def map_headers(headers, available_filters):
+def map_headers(headers, available_filters, dup_check=True):
     mapped_headers = {}
     for header in headers:
-        msg = "Select a filter for {}. \n If category not on list, select Keywords".format(header)
+        if dup_check:
+            msg = "Select a filter for {}. \n If category not on list, select Keywords".format(header)
+        else:
+            msg = "Select the appropriate data type for {}.".format(header)
         map_head = easygui.choicebox(msg, choices=available_filters)
         mapped_headers[header] = map_head
     return mapped_headers

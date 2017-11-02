@@ -20,7 +20,7 @@ if dupcheck_data is False:
 
 # Map Headers via User prompt
 current_headers = ui.detect_headers(dupcheck_data)
-relevant_headers = ui.select_relevant_headers(current_headers)
+relevant_headers = ui.select_relevant_headers(current_headers, dup_check=True)
 
 # TODO Finalize support for multiple field types
 # available_filters = []
@@ -29,10 +29,10 @@ relevant_headers = ui.select_relevant_headers(current_headers)
 #     for fil in af:
 #         available_filters.append(fil.strip())
 
-available_filters = ['Keywords']
+available_filters_dup = ['Keywords']
 
 
-category_term = ui.map_headers(relevant_headers, available_filters)
+category_term = ui.map_headers(relevant_headers, available_filters_dup, dup_check=True)
 dupcheck_data = dupcheck_data.replace(['null'], '')
 dupcheck_data = dupcheck_data.fillna('')
 
@@ -43,7 +43,6 @@ results_save_path = ui.select_save_loc()
 # From relevant header, create dictionary with search terms
 
 lead_holder_dict = {}
-
 for index, row in dupcheck_data.iterrows():
     person_data_dict = {}
     for relevant_header, header_mapping in category_term.items():
@@ -75,7 +74,6 @@ for index, row in dupcheck_data.iterrows():
             nd = ' OR '.join(v)
             person_data_dict[k] = nd
 
-
     lead_holder_dict[index] = person_data_dict
 
 
@@ -98,29 +96,59 @@ for k, v in lead_holder_dict.items():
 
 
 # For profiles, without result create profiles in Avature
+# Make a list of indexed rows that should be created
 
-profiles_to_create = {}
-
+profiles_to_create = []
 for k, v in dup_results_dict.items():
     if v is False:
-        profiles_to_create[k] = dupcheck_data.iloc[k].to_dict()
+        profiles_to_create.append(k)
+
+current_headers_create = ui.detect_headers(dupcheck_data)
+relevant_headers_create = ui.select_relevant_headers(current_headers, dup_check=False)
+
+available_filters_create = ['First Name', 'Last Name', 'Website', 'PDF Filename', 'Position Title', 'Company Name',
+                            'Email', 'Zip Code']
+
+create_supports_multiple = ['Website', 'Email']
 
 
-for create_profile in profiles_to_create.values():
-    first_name = create_profile['Name']
-
-    last_name = create_profile['Last Name_x']
-    website = create_profile['LinkedIn url (1)']
-    pdf_filename = create_profile['PDF Filename']
-    pdf_filename = os.path.join(r"C:\Users\estasney\Downloads", (pdf_filename + ".pdf"))
-    position_title = create_profile['Title']
-    company_name = create_profile['Company Name']
-    email_one = create_profile['Email 1']
-    if email_one == '':
-        continue
-    zip_code = create_profile['Zip Code']
+category_term_create = ui.map_headers(relevant_headers_create, available_filters_create, dup_check=False)
 
 
+create_people_dict = {}
+
+for create_index in profiles_to_create:
+    person_creation_dict = {}
+    print(create_index)
+    person_row = dupcheck_data.iloc[create_index]
+    for relevant_header, header_mapping in category_term_create.items():
+        rh_value = person_row[relevant_header]  # Retrieve cell value
+        rh_type = header_mapping  # Retrieve value type
+        creation_data = person_creation_dict.get(rh_type, [])
+        if rh_value != '':
+            creation_data.append(rh_value)
+        else:
+            continue
+        person_creation_dict[rh_type] = creation_data
+
+    # creation_dict now contains list of Type: Values, with Values being list
+    # If len(list) > 1, this will be treated as separate entries
+
+    for k, v in person_creation_dict.items():
+        if len(v) == 1:
+            nd = v[0]
+            person_creation_dict[k] = nd
+        elif len(v) > 1:
+            if k in create_supports_multiple:
+                person_creation_dict[k] = v
+            else:
+                print("Multiple Data Selected for Unsupported Field.")
+                print("Using first entry")
+                person_creation_dict[k] = v[0]
+
+    create_people_dict[int(create_index)] = person_creation_dict
+
+# Pass creation values to dup_checker
 
     dup_checker.click_create_button()
     dup_checker.click_create_person()
