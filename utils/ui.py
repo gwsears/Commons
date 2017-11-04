@@ -100,3 +100,22 @@ def prompt_header_match(headers):
         print("User entries do not match list, try again.")
         return prompt_header_match(headers)
 
+def prompt_user_downloads():
+    user_msg = "Select the directory where PDF Files are located."
+    user_dir = easygui.diropenbox(msg=user_msg)
+    # files_in_dir = os.listdir(user_dir)
+    return user_dir
+
+
+def file_exists(filename, file_dir):
+    if ".pdf" not in filename:
+        filename = filename + ".pdf"
+    full_path = os.path.join(file_dir, filename)
+    if os.path.isfile(full_path):
+        return full_path
+    else:
+        return False
+
+
+
+

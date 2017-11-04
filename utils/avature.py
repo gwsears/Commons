@@ -15,47 +15,41 @@ class DupDriver(object):
     def begin_session(self):
         self.setup_driver()
         self.login_avature()
-        self.clean_slate()
 
     def clean_slate(self):
-        dirty_slate = True
-        while dirty_slate is True:
-            try:
-                filter_i = self.driver.find_element_by_css_selector("span.conditionViewer a")
-                filter_text = filter_i.text
-                self.clear_filter(filter_text)
-            except selenium.common.exceptions.NoSuchElementException:
-                dirty_slate = False
-        return
+        try:
+            self.driver.find_element_by_class_name("conditionExpandCollapseLink")
+            hidden_filters = True
+        except selenium.common.exceptions.NoSuchElementException:
+            hidden_filters = False
+        try:
+            filter_i = self.driver.find_elements_by_css_selector("span.conditionViewer a")
+            filter_texts = []
+            for f in filter_i:
+                filter_texts.append(f.text)
+            for f in filter_texts:
+                self.clear_filter(f)
+            if hidden_filters is True:
+                return False
+            else:
+                return True
+        except selenium.common.exceptions.NoSuchElementException:
+            return True
 
     def clear_filter(self, filter_text):
         try:
-            try:
-                filter_hyperlink = self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
-                self.cursor_to_element(filter_hyperlink)
-                filter_hyperlink.click()
-                WebDriverWait(self.driver, 10).until(
-                    EC.element_to_be_clickable((By.LINK_TEXT, "Remove filter")))
-                filter_hyperlink_remove = self.driver.find_element_by_link_text("Remove filter")
-                self.cursor_to_element(filter_hyperlink_remove)
-                filter_hyperlink_remove.click()
-                WebDriverWait(self.driver, 10).until_not(
-                    EC.element_to_be_clickable((By.LINK_TEXT, filter_text)))
-                self.confirm_filter_clear(filter_text)
-            except selenium.common.exceptions.NoSuchElementException:
-                return
+            filter_hyperlink = self.driver.find_element_by_partial_link_text(filter_text)
+            self.cursor_to_element(filter_hyperlink)
+            filter_hyperlink.click()
+            WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.LINK_TEXT, "Remove filter")))
+            filter_hyperlink_remove = self.driver.find_element_by_partial_link_text("Remove filter")
+            self.cursor_to_element(filter_hyperlink_remove)
+            filter_hyperlink_remove.click()
+            WebDriverWait(self.driver, 10).until(
+                EC.staleness_of(filter_hyperlink))
         except Exception as e:
-            print("Problem Clearing Filter")
             print(e)
-
-
-    def confirm_filter_clear(self, dup_key):
-        try:
-            self.driver.find_element_by_css_selector("a.list_conditionsviewer_ItemValuePopupLink_Link")
-            self.clear_filter(dup_key)
-        except selenium.common.exceptions.NoSuchElementException:
-            pass
-
 
     def setup_driver(self):
         self.driver = webdriver.Chrome(executable_path=self.driver_path)
@@ -69,27 +63,26 @@ class DupDriver(object):
         log_out_button.click()
         self.driver.quit()
 
-
-    def avature_session_status(self):
-        try:
-            # Returns True if Session is Still Active
-            session_active = WebDriverWait(self.driver, 5).until_not(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "div.DialogLoginPopup"))
-            )
-            return True
-        except:
-            return False
-
+    # def avature_session_status(self):
+    #     try:
+    #         # Returns True if Session is Still Active
+    #         session_active = WebDriverWait(self.driver, 5).until_not(
+    #             EC.presence_of_element_located((By.CSS_SELECTOR, "div.DialogLoginPopup"))
+    #         )
+    #         return True
+    #     except:
+    #         return False
 
     def login_avature(self):
         self.driver.get("https://cisco.avature.net")
         easygui.msgbox("Please Login Into Avature. Minimize this window and then click OK when you are logged in.")
         time.sleep(5)
         easygui.ccbox("Confirming You Are Logged In to Avature")
-        self.clean_slate()
-        self.driver.get(
-            "https://cisco.avature.net/#People/Id:2266/Filters:{\"entityTypeId\":2,\"id\":396094,\"set\":null,\"timeZone\":\"America*/New_York\"}")
-
+        if self.clean_slate() is False:
+            self.clean_slate()
+        self.driver.get("https://cisco.avature.net/#People/Id:2266")
+        if self.clean_slate() is False:
+            self.clean_slate()
 
     def cursor_to_element(self, element):  # Move mouse over element
         try:
@@ -274,17 +267,36 @@ class DupDriver(object):
         )
 
     def profile_enter_talent_hub_specialist(self, ths="Eric Stasney"):
-        ths_box = self.driver.find_element_by_xpath("//span[text()='Talent Hub Specialist']//ancestor::div[@class='row']//span[text()='Edit']")
+        # Find Talent Hub Specialist Box
+        ths_box = self.driver.find_element_by_xpath(
+            "//span[text()='Talent Hub Specialist']//ancestor::div[@class='row']//span[text()='Edit']")
         ths_box.click()
-        ths_dropdown = self.driver.find_element_by_xpath("//div[@class='AdvancedSelectInput']")
-        ths_dropdown_input = ths_dropdown.find_element_by_xpath("//input")
-        ths_dropdown_input.send_keys(ths)
-        matched_selector = "span[title*='{}']".format(ths)
-        matched_ths = self.driver.find_element_by_css_selector(matched_selector)
-        matched_ths.click()
-        ths_confirmed_selector = "//span[contains(text(), '{}')]".format(ths)
+        # We wait for the popup dialog to appear
         WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, ths_confirmed_selector))
+            EC.visibility_of_element_located((By.CLASS_NAME, "AdvancedSelectInput"))
+        )
+        # Finding popup dialog and clicking
+        ths_dropdown = self.driver.find_element_by_xpath("//div[@class='AdvancedSelectInput']")
+        ths_dropdown.click()
+        ths_dropdown_input = ths_dropdown.find_element_by_xpath("//input")
+        ths_dropdown_input.click()
+        # A scrollable, floating menu appears. Wait for it
+        WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "FloatingMenu"))
+        )
+        ths_dropdown_input = self.driver.find_element_by_xpath("//input")
+        ths_dropdown_input.send_keys(ths)
+        # This finds the selectable element that matches by THS name
+        matched_selector = "//span[contains(text(), '{}')][@class='FloatingMenuItemContent']".format(ths)
+        matched_ths = self.driver.find_element_by_xpath(matched_selector)
+        self.cursor_to_element(matched_ths)
+        matched_ths.click()
+        # This simulates moving the mouse away from input and clicking. Equivalent to a "save" action
+        ActionChains(self.driver).move_by_offset(500, 0).click().perform()
+        # Wait until our expected field shows in Talent Hub Specialist
+        ths_confirmed_selector = "//ul[@class='schema_viewer_BaseLinkList']//span[contains(text(), '{}')]".format(ths)
+        WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, ths_confirmed_selector))
         )
 
     def contact_info_click_plus(self):
@@ -295,27 +307,40 @@ class DupDriver(object):
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.FloatingMenuButton span[title='Phone']"))
         )
 
-    def contact_info_enter_field(self, field_type, text_entry): # 'Email', 'Website' 'Street Address'
+    def contact_info_enter_field(self, field_type, text_entry):  # 'Email', 'Website' 'Street Address'
         desired_field_selector = "span[title='{}']".format(field_type)
         desired_field = self.driver.find_element_by_css_selector(desired_field_selector)
         desired_field.click()
+
+        # await generic popup dialog
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "table.EditContactInfoContainer"))
         )
-        if field_type != 'Street address':
+
+        if field_type != 'Street address':  # Street address will have multiple input boxes
             field_entry_box = self.driver.find_element_by_xpath("//input")
+            WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//input"))
+            )
+            field_entry_box.click()
             field_entry_box.send_keys(text_entry)
+            ActionChains(self.driver).move_by_offset(500, 0).click().perform()
             WebDriverWait(self.driver, 10).until(
                 EC.invisibility_of_element_located((By.CSS_SELECTOR, "table.EditContactInfoContainer"))
             )
             return
         else:
-            country_dropdown = self.driver.find_element_by_xpath("//option[@title='United States']")
-            country_dropdown.click()
+            country_dropdown = self.driver.find_element_by_xpath("//span[@class='CountryEditor']")
+            u_s = self.driver.find_element_by_xpath("//option[@title='United States']")
+            u_s.click()
             zip_code_box = self.driver.find_element_by_css_selector("input[placeholder='Zip/Postal code']")
+            self.cursor_to_element(zip_code_box)
+            zip_code_box.click()
             zip_code_box.send_keys(text_entry)
+            zip_code_box.send_keys(u'\ue007')
 
-    def attach_pdf(self, file_name, file_path):
+
+    def attach_pdf(self, file_path):
         attach_button = self.driver.find_element_by_xpath("//a[text()='Attach']")
         self.cursor_to_element(attach_button)
         attach_button.click()
@@ -323,19 +348,17 @@ class DupDriver(object):
             EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
         )
         choose_file = self.driver.find_element_by_css_selector("input[type='file']")
-        try:
-            choose_file.send_keys(file_path)
-        except:
-            return
+        choose_file.send_keys(file_path)
         save_file_button = self.driver.find_element_by_xpath("//button[text()='Save']")
         save_file_button.click()
         WebDriverWait(self.driver, 30).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "button.TIN_input_button_Base TIN_input_button_Cancel"))
+            EC.element_to_be_clickable((By.XPATH, "//*[@class='DialogContainer ']//button[text()='Cancel']"))
         )
-        cancel_button = self.driver.find_element_by_css_selector("button.TIN_input_button_Base TIN_input_button_Cancel")
+        cancel_button = self.driver.find_element_by_xpath("//*[@class='DialogContainer ']//button[text()='Cancel']")
+        self.cursor_to_element(cancel_button)
         cancel_button.click()
         WebDriverWait(self.driver, 10).until(
-            EC.invisibility_of_element_located((By.CSS_SELECTOR, "button.TIN_input_button_Base TIN_input_button_Cancel"))
+            EC.invisibility_of_element_located((By.CLASS_NAME, "DialogContainer "))
         )
 
     def open_creation_dialog(self):
@@ -344,17 +367,58 @@ class DupDriver(object):
         self.select_create_method()
 
     def values_to_creation_dialog(self, person_dict):
+        current_url = self.driver.current_url
         self.open_creation_dialog()
         self.create_first_name(person_dict['First Name'])
         self.create_last_name(person_dict['Last Name'])
         self.create_position_title(person_dict['Position Title'])
         self.create_current_company(person_dict['Company Name'])
         self.create_click_select_source_dropdown()
-        if type(person_dict['Email']) == 'list':
+        if isinstance(person_dict['Email'], list):
             self.create_email(person_dict['Email'][0])
         else:
             self.create_email(person_dict['Email'])
         self.create_save_button(person_dict['First Name'], person_dict['Last Name'])
+        # Waiting until page URL changes. Will pass person ID value back
+        wait_new_page = WebDriverWait(self.driver, 10)
+        wait_new_page.until(lambda driver: driver.current_url != current_url)
+        # Once page URL has changed, pass person ID back
+        new_url = self.driver.current_url
+        person_id = new_url.split("/#Person/")[1]  # returns person_id
+        return person_id
+
+    def contact_info_handler(self, field_type, text_entry):
+        if text_entry == '':
+            return
+        self.contact_info_click_plus()
+        self.contact_info_enter_field(field_type, text_entry)
+
+    def profile_additional_info(self, person_dict):
+        self.profile_enter_talent_hub_specialist()
+        websites = person_dict['Website']
+        if isinstance(websites, list):
+            for ws in websites:
+                self.contact_info_handler('Website', ws)
+        else:
+            self.contact_info_handler('Website', websites)
+        pdf_filename = person_dict['PDF Filename']
+        self.attach_pdf(pdf_filename)  # Should be full path
+        emails = person_dict['Email']
+        if isinstance(emails, list):
+            emails = emails[1:]  # First email will have been used
+            for email in emails:
+                self.contact_info_handler('Email', email)
+        zip_code = person_dict['Zip Code']
+        self.contact_info_handler('Street address', str(zip_code))  # Just to be sure
+        self.driver.get("https://cisco.avature.net/#People/Id:2266")
+        WebDriverWait(self.driver, 20).until(
+            EC.title_is("All People - ATS")
+        )
+
+
+
+
+
 
 
 
@@ -391,23 +455,19 @@ class DupDriver(object):
 
 # TODO Add dup_key_map
 
-    def dup_check_avature(self, type_value_dict):  # Expects Dictionary with Type : Data format
-        if self.avature_session_status():
-            for k, v in type_value_dict.items():
-                self.open_filter_dropdown()
-                self.set_filter(k, v)
-        else:
-            return False
-        if self.avature_session_status():
-            dup_results = self.results_exist()
-        else:
-            return False
+    def dup_check(self, type_value_dict):  # Expects Dictionary with Type : Data format
+        for k, v in type_value_dict.items():
+            self.open_filter_dropdown()
+            self.set_filter(k, v)
+        dup_results = self.results_exist()
         # Clear the filter search
-        if self.avature_session_status():
-            self.clean_slate()
-        else:
-            return False
+        self.clean_slate()
         return dup_results
+
+    def create_profile(self, type_value_dict):
+        # Click to get new profile dialog
+        self.
+
 
 
 
