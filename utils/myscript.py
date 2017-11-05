@@ -78,43 +78,81 @@ for index, row in dupcheck_data.iterrows():
 
 
 # Initialize Dup Checker
-dup_checker = avature.DupDriver(driver_path=r"C:\Users\estasney\PycharmProjects\Commons\utils\chromedriver.exe")
+dup_checker = avature.DupDriver(driver_path=r"C:\Users\erics_qp7a9\PycharmProjects\Commons\chromedriver.exe")
 # Create dict to hold results
 dup_results_dict = {}
 # Open, login, etc
 dup_checker.begin_session()
+
+
 for k, v in lead_holder_dict.items():
     data_to_dupchecker = v
 
     # Returns FALSE if no matches, string of search url if matches found
 
-    dup_result = dup_checker.dup_check_avature(data_to_dupchecker)
+    dup_result = dup_checker.dup_check(data_to_dupchecker)
 
     # Simple index lookup
 
     dup_results_dict[k] = dup_result
 
+
+# Add the results as new column to original DataFrame
 dupcheck_data['Results'] = dup_results_dict.values()
 
-
-# For profiles, without result create profiles in Avature
-# Make a list of indexed rows that should be created
-
-profiles_to_create = dupcheck_data[(dupcheck_data['Results'] == False)]
-
+# Where are the PDF's located?
 pdf_files_dir = ui.prompt_user_downloads()
 
+# This won't include the Results column
+relevant_headers_create = ui.select_relevant_headers(current_headers, dup_check=False)
 
-# create_profiles_df = pd.read_excel(r"C:\Users\estasney\Downloads\temp_results.xlsx")
-
-current_headers_create = ui.detect_headers(profiles_to_create)
-relevant_headers_create = ui.select_relevant_headers(current_headers_create, dup_check=False)
+# These are options the user may choose
+# Every relevant header is mapped to one of these
 available_filters_create = ['First Name', 'Last Name', 'Website', 'PDF Filename', 'Position Title', 'Company Name',
                             'Email', 'Zip Code']
 
+# These are options that support lists as values
 create_supports_multiple = ['Website', 'Email']
 
-category_term_create = ui.map_headers(relevant_headers_create, available_filters_create, dup_check=False)
+# Asking the user to map the headers
+# Returns dict in col : data_type format
+col_data_type_create = ui.map_headers(relevant_headers_create, available_filters_create, dup_check=False)
+
+# It would be useful to have data_type : col mapping as well
+data_type_col_create = {}
+for k, v in col_data_type_create.items():
+    # If key not found, return list
+    # Recall we are swapping k, v
+    lookup = data_type_col_create.get(v, [])
+    lookup.append(k)
+    data_type_col_create[v] = lookup
+
+
+# Create new DataFrame of Leads
+# Remove potential duplicates
+no_dups = dupcheck_data[(dupcheck_data['Results'] == False)]
+
+# All should have at least one email
+# Remove rows without emails, using our reverse mapping from above
+email_columns = data_type_col_create['Email']
+for i, row in no_dups.iterrows():
+    will_drop = True
+    if isinstance(email_columns, list):
+        for ec in email_columns:
+            if row[ec] != '':
+                will_drop = False
+    elif isinstance(email_columns, str):
+        if row[email_columns] != '':
+            will_drop = False
+    if will_drop:
+        no_dups.drop(i)
+
+
+
+
+has_email = pd.concat(has_email_frames)
+
+no_dups[(no_dups[email_col] != '')for email_col in data_type_col_create['Email']
 
 creation_dict_holder = []
 

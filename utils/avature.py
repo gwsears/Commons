@@ -12,6 +12,20 @@ class DupDriver(object):
         self.driver_path = driver_path
         self.driver = None
 
+    def parse_strategy(self, strategy):
+        if strategy == 'CLASS_NAME':
+            return By.CLASS_NAME
+        elif strategy == 'XPATH':
+            return By.XPATH
+        elif strategy == 'CSS_SELECTOR':
+            return By.CSS_SELECTOR
+        elif strategy == 'ID':
+            return By.ID
+        elif strategy == 'LINK_TEXT':
+            return By.LINK_TEXT
+        elif strategy == 'PARTIAL_LINK_TEXT':
+            return By.PARTIAL_LINK_TEXT
+
     def begin_session(self):
         self.setup_driver()
         self.login_avature()
@@ -120,7 +134,7 @@ class DupDriver(object):
                 except selenium.common.exceptions.NoSuchElementException:
                     # I.e. full name filter
                     text_box = self.driver.find_element_by_xpath("//div[@class='inputContainer']/input")
-                text_box.clear()
+                # text_box.clear()
                 text_box.send_keys(filter_text)
                 apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
                 apply_button.click()
@@ -415,20 +429,6 @@ class DupDriver(object):
             EC.title_is("All People - ATS")
         )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def results_exist(self):
         # TODO : Filter results that match from fields not associated with keyword search
         try:
@@ -447,11 +447,6 @@ class DupDriver(object):
             print("Problem interpreting results")
             print(e)
 
-    # def results_relevant(self, dup_key_map):
-
-
-
-
 
 # TODO Add dup_key_map
 
@@ -466,7 +461,11 @@ class DupDriver(object):
 
     def create_profile(self, type_value_dict):
         # Click to get new profile dialog
-        self.
+        self.open_creation_dialog()
+        person_id = self.values_to_creation_dialog(type_value_dict)
+        self.profile_additional_info(type_value_dict)
+        return person_id
+        # Add additional fields to profile
 
 
 
