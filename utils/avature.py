@@ -96,7 +96,7 @@ class DupDriver(object):
             self.clean_slate()
         self.driver.get("https://cisco.avature.net/#People/Id:2266")
         WebDriverWait(self.driver, 30).until(
-            EC.element_to_be_clickable((By.XPATH, "//div[3]/div/span/span"))
+            EC.element_to_be_clickable((By.XPATH, "//*[text()='Add filter']"))
         )
         if self.clean_slate() is False:
             self.clean_slate()
