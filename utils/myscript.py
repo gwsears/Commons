@@ -78,7 +78,9 @@ for index, row in dupcheck_data.iterrows():
 
 
 # Initialize Dup Checker
-dup_checker = avature.DupDriver(driver_path=r"C:\Users\erics_qp7a9\PycharmProjects\Commons\chromedriver.exe")
+user_path = os.path.join("C:\\Users", os.getlogin())
+chromedriver_path = os.path.join(user_path, r"PycharmProjects\Commons\utils\chromedriver.exe")
+dup_checker = avature.DupDriver(driver_path=chromedriver_path)
 # Create dict to hold results
 dup_results_dict = {}
 # Open, login, etc
@@ -132,6 +134,9 @@ for k, v in col_data_type_create.items():
 # Remove potential duplicates
 no_dups = dupcheck_data[(dupcheck_data['Results'] == False)]
 
+# We also drop any duplicates
+no_dups = no_dups.drop_duplicates()
+
 # All should have at least one email
 # Remove rows without emails, using our reverse mapping from above
 email_columns = data_type_col_create['Email']
@@ -145,23 +150,13 @@ for i, row in no_dups.iterrows():
         if row[email_columns] != '':
             will_drop = False
     if will_drop:
-        no_dups.drop(i)
+        no_dups.drop([i], inplace=True)
 
-
-
-
-has_email = pd.concat(has_email_frames)
-
-no_dups[(no_dups[email_col] != '')for email_col in data_type_col_create['Email']
 
 creation_dict_holder = []
-
-create_profiles_df = profiles_to_create.replace(['null'], '')
-create_profiles_df = create_profiles_df.fillna('')
-
-for index, row in create_profiles_df.iterrows():
+for index, row in no_dups.iterrows():
     person_creation_dict = {}
-    for relevant_header, header_mapping in category_term_create.items():
+    for relevant_header, header_mapping in col_data_type_create.items():
         rh_value = row[relevant_header]  # Retrieve cell value
         rh_type = header_mapping  # Retrieve value type
         if rh_type == 'PDF Filename':
@@ -194,11 +189,8 @@ for index, row in create_profiles_df.iterrows():
 
     creation_dict_holder.append(person_creation_dict)
 
-for creation_person in creation_dict_holder:
-    if creation_person.get('Email', False) is False:
-        ci = creation_dict_holder.index(creation_person)
-        creation_dict_holder.pop(ci)
 
+# We iterate through list passing to dupchecker for creation
 dup_checker.values_to_creation_dialog(creation_dict_holder[0])
 dup_checker.profile_additional_info(creation_dict_holder[0])
 

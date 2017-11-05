@@ -87,7 +87,7 @@ class DupDriver(object):
     #     except:
     #         return False
 
-    def login_avature(self):
+    def login_avature(self): # TODO Wait for List View to Be Loaded
         self.driver.get("https://cisco.avature.net")
         easygui.msgbox("Please Login Into Avature. Minimize this window and then click OK when you are logged in.")
         time.sleep(5)
@@ -95,6 +95,9 @@ class DupDriver(object):
         if self.clean_slate() is False:
             self.clean_slate()
         self.driver.get("https://cisco.avature.net/#People/Id:2266")
+        WebDriverWait(self.driver, 30).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[3]/div/span/span"))
+        )
         if self.clean_slate() is False:
             self.clean_slate()
 
@@ -324,6 +327,7 @@ class DupDriver(object):
     def contact_info_enter_field(self, field_type, text_entry):  # 'Email', 'Website' 'Street Address'
         desired_field_selector = "span[title='{}']".format(field_type)
         desired_field = self.driver.find_element_by_css_selector(desired_field_selector)
+        self.cursor_to_element(desired_field)
         desired_field.click()
 
         # await generic popup dialog
@@ -338,7 +342,9 @@ class DupDriver(object):
             )
             field_entry_box.click()
             field_entry_box.send_keys(text_entry)
-            ActionChains(self.driver).move_by_offset(500, 0).click().perform()
+            time.sleep(1)
+            field_entry_box.send_keys(u'\ue007')
+            # ActionChains(self.driver).move_by_offset(500, 0).click().perform()
             WebDriverWait(self.driver, 10).until(
                 EC.invisibility_of_element_located((By.CSS_SELECTOR, "table.EditContactInfoContainer"))
             )
