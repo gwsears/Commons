@@ -87,6 +87,8 @@ dup_results_dict = {}
 dup_checker.begin_session()
 
 
+dupcheck_data = dupcheck_data.drop_duplicates()
+
 for k, v in lead_holder_dict.items():
     data_to_dupchecker = v
 

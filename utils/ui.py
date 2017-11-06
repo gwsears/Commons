@@ -81,6 +81,10 @@ def map_headers(headers, available_filters, dup_check=True):
             msg = "Select a filter for {}. \n If category not on list, select Keywords".format(header)
         else:
             msg = "Select the appropriate data type for {}.".format(header)
+        # We can skip asking the obvious
+        if header in available_filters:
+            # Fastest way
+            mapped_headers[header] = header
         map_head = easygui.choicebox(msg, choices=available_filters)
         mapped_headers[header] = map_head
     return mapped_headers

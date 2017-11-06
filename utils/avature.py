@@ -405,6 +405,9 @@ class DupDriver(object):
         # Once page URL has changed, pass person ID back
         new_url = self.driver.current_url
         person_id = new_url.split("/#Person/")[1]  # returns person_id
+        WebDriverWait(self.driver, 30).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "ExtensionViewerFieldContainer"))
+        )
         return person_id
 
     def contact_info_handler(self, field_type, text_entry):
