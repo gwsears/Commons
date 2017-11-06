@@ -1,22 +1,5 @@
-import easygui
-import pandas as pd
-# from utils import ui, avature
-from utils import ui
-from utils import avature
-import os
-"""
 
 
-"""
-
-# TODO Welcome Screen
-
-# Select File to Check
-data_in_path = ui.select_set()
-dupcheck_data = ui.read_set(data_in_path)
-if dupcheck_data is False:
-    print("Error opening file, check encoding")
-    quit()
 
 # Map Headers via User prompt
 current_headers = ui.detect_headers(dupcheck_data)

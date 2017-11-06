@@ -57,11 +57,13 @@ class DupDriver(object):
             filter_hyperlink = self.driver.find_element_by_partial_link_text(filter_text)
             self.cursor_to_element(filter_hyperlink)
             filter_hyperlink.click()
+            time.sleep(1)
             WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable((By.LINK_TEXT, "Remove filter")))
             filter_hyperlink_remove = self.driver.find_element_by_partial_link_text("Remove filter")
             self.cursor_to_element(filter_hyperlink_remove)
             filter_hyperlink_remove.click()
+            time.sleep(1)
             WebDriverWait(self.driver, 10).until(
                 EC.staleness_of(filter_hyperlink))
         except Exception as e:
@@ -97,6 +99,7 @@ class DupDriver(object):
         if self.clean_slate() is False:
             self.clean_slate()
         self.driver.get("https://cisco.avature.net/#People/Id:2266")
+        time.sleep(1)
         WebDriverWait(self.driver, 30).until(
             EC.element_to_be_clickable((By.XPATH, "//*[text()='Add filter']"))
         )
@@ -116,6 +119,7 @@ class DupDriver(object):
             add_filter_menu = self.driver.find_element_by_xpath("//div[3]/div/span/span")
             self.cursor_to_element(add_filter_menu)
             add_filter_menu.click()
+            time.sleep(1)
             WebDriverWait(self.driver, 10).until(
                         EC.visibility_of_element_located((By.CSS_SELECTOR, "div.FloatingMenu.filtersFloatingMenu"))
             )
@@ -144,6 +148,7 @@ class DupDriver(object):
                 apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
                 apply_button.click()
                 # Wait for apply button to not be visible
+                time.sleep(1)
                 WebDriverWait(self.driver, 10).until_not(
                     EC.visibility_of_element_located((By.XPATH, "//button[text()='Apply']"))
                 )
@@ -159,6 +164,7 @@ class DupDriver(object):
         add_more = self.driver.find_element_by_xpath("//span[text()='Add more filters']")
         self.cursor_to_element(add_more)
         add_more.click()
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//a[@title='Columns']"))
         )
@@ -174,9 +180,11 @@ class DupDriver(object):
         filter_element.click()
         apply_button = self.driver.find_element_by_xpath("//button[text()='Apply']")
         apply_button.click()
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until_not(
             EC.visibility_of_element_located((By.XPATH, "//button[text()='Apply']"))
         )
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.visibility_of_element_located((By.CLASS_NAME, "ListRefresherIcon"))
         )
@@ -188,6 +196,7 @@ class DupDriver(object):
             self.add_more_filters_select()
             column_button = self.driver.find_element_by_xpath("//a[@title='Columns']")
             column_button.click()
+            time.sleep(1)
             WebDriverWait(self.driver, 10).until(
                 EC.visibility_of_element_located((By.CSS_SELECTOR, "table.EditableSelect"))
             )
@@ -200,6 +209,7 @@ class DupDriver(object):
         selector_col_selected = selector_base_selected.format(column)
         try:
             column_entry = self.driver.find_element_by_xpath(selector_col_available)
+            time.sleep(1)
             WebDriverWait(self.driver, 10).until(
                 EC.visibility_of_element_located((By.CSS_SELECTOR, selector_col_selected))
             )
@@ -218,6 +228,7 @@ class DupDriver(object):
         create_button = self.driver.find_element_by_css_selector(".crmui_recordcreator_Base")
         self.cursor_to_element(create_button)
         create_button.click()
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.visibility_of_element_located((By.XPATH, "//div[@class='crmui_Sidebar']//span[text()='Person']"))
         )
@@ -226,6 +237,7 @@ class DupDriver(object):
         create_person = self.driver.find_element_by_xpath("//div[@class='crmui_Sidebar']//span[text()='Person']")
         self.cursor_to_element(create_person)
         create_person.click()
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.visibility_of_element_located((By.XPATH, "//h1[text()='Create person']"))
         )
@@ -234,6 +246,7 @@ class DupDriver(object):
         manual_selection = self.driver.find_element_by_xpath("// li[text() = 'Manually']")
         self.cursor_to_element(manual_selection)
         manual_selection.click()
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.CLASS_NAME, "PersonCreatorManualFirstName"))
         )
@@ -266,6 +279,7 @@ class DupDriver(object):
         matched_source = self.driver.find_element_by_xpath(matched_selector)
         self.cursor_to_element(matched_source)
         matched_source.click()
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.invisibility_of_element_located((By.XPATH, matched_selector))
         )
@@ -281,6 +295,7 @@ class DupDriver(object):
         save_button.click()
         person_profile_selector = "//span[@class='record_EditableTitle_Viewer']/span[text()='{} {}']".format(
             person_first, person_last)
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.visibility_of_element_located((By.XPATH, person_profile_selector))
         )
@@ -291,6 +306,7 @@ class DupDriver(object):
             "//span[text()='Talent Hub Specialist']//ancestor::div[@class='row']//span[text()='Edit']")
         ths_box.click()
         # We wait for the popup dialog to appear
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.visibility_of_element_located((By.CLASS_NAME, "AdvancedSelectInput"))
         )
@@ -300,6 +316,7 @@ class DupDriver(object):
         ths_dropdown_input = ths_dropdown.find_element_by_xpath("//input")
         ths_dropdown_input.click()
         # A scrollable, floating menu appears. Wait for it
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.CLASS_NAME, "FloatingMenu"))
         )
@@ -314,6 +331,7 @@ class DupDriver(object):
         ActionChains(self.driver).move_by_offset(500, 0).click().perform()
         # Wait until our expected field shows in Talent Hub Specialist
         ths_confirmed_selector = "//ul[@class='schema_viewer_BaseLinkList']//span[contains(text(), '{}')]".format(ths)
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, ths_confirmed_selector))
         )
@@ -322,6 +340,7 @@ class DupDriver(object):
         plus_button = self.driver.find_element_by_css_selector("div.contactInfoList .uicore_layout_panel_HeaderToolbar_Item > span")
         self.cursor_to_element(plus_button)
         plus_button.click()
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.FloatingMenuButton span[title='Phone']"))
         )
@@ -333,12 +352,14 @@ class DupDriver(object):
         desired_field.click()
 
         # await generic popup dialog
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "table.EditContactInfoContainer"))
         )
 
         if field_type != 'Street address':  # Street address will have multiple input boxes
             field_entry_box = self.driver.find_element_by_xpath("//input")
+            time.sleep(1)
             WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable((By.XPATH, "//input"))
             )
@@ -347,6 +368,7 @@ class DupDriver(object):
             time.sleep(1)
             field_entry_box.send_keys(u'\ue007')
             # ActionChains(self.driver).move_by_offset(500, 0).click().perform()
+            time.sleep(1)
             WebDriverWait(self.driver, 10).until(
                 EC.invisibility_of_element_located((By.CSS_SELECTOR, "table.EditContactInfoContainer"))
             )
@@ -366,6 +388,7 @@ class DupDriver(object):
         attach_button = self.driver.find_element_by_xpath("//a[text()='Attach']")
         self.cursor_to_element(attach_button)
         attach_button.click()
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file']"))
         )
@@ -373,12 +396,14 @@ class DupDriver(object):
         choose_file.send_keys(file_path)
         save_file_button = self.driver.find_element_by_xpath("//button[text()='Save']")
         save_file_button.click()
+        time.sleep(1)
         WebDriverWait(self.driver, 30).until(
             EC.element_to_be_clickable((By.XPATH, "//*[@class='DialogContainer ']//button[text()='Cancel']"))
         )
         cancel_button = self.driver.find_element_by_xpath("//*[@class='DialogContainer ']//button[text()='Cancel']")
         self.cursor_to_element(cancel_button)
         cancel_button.click()
+        time.sleep(1)
         WebDriverWait(self.driver, 10).until(
             EC.invisibility_of_element_located((By.CLASS_NAME, "DialogContainer "))
         )
@@ -402,11 +427,13 @@ class DupDriver(object):
             self.create_email(person_dict['Email'])
         self.create_save_button(person_dict['First Name'], person_dict['Last Name'])
         # Waiting until page URL changes. Will pass person ID value back
+        time.sleep(1)
         wait_new_page = WebDriverWait(self.driver, 10)
         wait_new_page.until(lambda driver: driver.current_url != current_url)
         # Once page URL has changed, pass person ID back
         new_url = self.driver.current_url
         person_id = new_url.split("/#Person/")[1]  # returns person_id
+        time.sleep(1)
         WebDriverWait(self.driver, 30).until(
             EC.element_to_be_clickable((By.CLASS_NAME, "ExtensionViewerFieldContainer"))
         )
@@ -436,6 +463,7 @@ class DupDriver(object):
         zip_code = person_dict['Zip Code']
         self.contact_info_handler('Street address', str(zip_code))  # Just to be sure
         self.driver.get("https://cisco.avature.net/#People/Id:2266")
+        time.sleep(1)
         WebDriverWait(self.driver, 20).until(
             EC.title_is("All People - ATS")
         )
@@ -443,6 +471,7 @@ class DupDriver(object):
     def results_exist(self):
         # TODO : Filter results that match from fields not associated with keyword search
         try:
+            time.sleep(1)
             filter_on_page = WebDriverWait(self.driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, "span.conditionViewer"))
                     )
