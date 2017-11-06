@@ -191,7 +191,7 @@ for index, row in no_dups.iterrows():
 
     creation_dict_holder.append(person_creation_dict)
 
-
+dup_checker.create_profile(self, type_value_dict)
 # We iterate through list passing to dupchecker for creation
 dup_checker.values_to_creation_dialog(creation_dict_holder[0])
 dup_checker.profile_additional_info(creation_dict_holder[0])

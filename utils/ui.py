@@ -85,6 +85,7 @@ def map_headers(headers, available_filters, dup_check=True):
         if header in available_filters:
             # Fastest way
             mapped_headers[header] = header
+            continue
         map_head = easygui.choicebox(msg, choices=available_filters)
         mapped_headers[header] = map_head
     return mapped_headers
