@@ -501,7 +501,6 @@ class DupDriver(object):
 
     def create_profile(self, type_value_dict):
         # Click to get new profile dialog
-        self.open_creation_dialog()
         person_id = self.values_to_creation_dialog(type_value_dict)
         self.profile_additional_info(type_value_dict)
         return person_id

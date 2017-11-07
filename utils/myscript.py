@@ -1,6 +1,5 @@
 import easygui
 import pandas as pd
-# from utils import ui, avature
 from utils import ui
 from utils import avature
 import os
@@ -191,21 +190,11 @@ for index, row in no_dups.iterrows():
 
     creation_dict_holder.append(person_creation_dict)
 
-dup_checker.create_profile(self, type_value_dict)
-# We iterate through list passing to dupchecker for creation
-dup_checker.values_to_creation_dialog(creation_dict_holder[0])
-dup_checker.profile_additional_info(creation_dict_holder[0])
+
+for i in creation_dict_holder:
+    dup_checker.create_profile(creation_dict_holder[i])
 
 # Pass creation values to dup_checker
-
-
-
-
-
-
-
-
-
 
 # Merge results dict with dup_check data
 df_results = pd.DataFrame.from_dict(dup_results_dict, orient='index')
